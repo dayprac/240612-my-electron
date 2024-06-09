@@ -1,6 +1,14 @@
 // window
-const { app, BrowserWindow } = require("electron");
-app.whenReady().then(() => {
+const { app, session, BrowserWindow } = require("electron");
+const path = require("path");
+
+app.whenReady().then(async () => {
   const window = new BrowserWindow();
-  window.loadURL("https://fs1.app/videos/ssis-313/");
+  // console.log(app.getPath("userData")); // /Users/qianzhiqiang/Library/Application Support/my-electron
+  await session.defaultSession.loadExtension(
+    path.join(__dirname, "/minimal-chrome-extension"),
+    // allowFileAccess is required to load the devtools extension on file:// URLs.
+    { allowFileAccess: true }
+  );
+  window.loadFile("./minimal-chrome-extension/demo.html");
 });
