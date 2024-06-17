@@ -25,22 +25,8 @@ app.whenReady().then(async () => {
 });
 
 function handleIPC() {
-  ipcMain.handle("load-extension", async function () {
-    const extensionPath =
-      __dirname.split("app.asar")[0] + "minimal-chrome-extension";
-    console.log(
-      "[debug handleIPC load-extension extensionPath]",
-      extensionPath
-    );
-
-    const res = await session.defaultSession.loadExtension(
-      // path.join(__dirname, "/minimal-chrome-extension"),
-      extensionPath,
-      // allowFileAccess is required to load the devtools extension on file:// URLs.
-      { allowFileAccess: true }
-    );
-    console.log("[debug handleIPC after loaded]", res);
-    const allExtensions = session.defaultSession.getAllExtensions();
-    console.log("[debug handleIPC allExtensions]", allExtensions);
+  ipcMain.handle("ping", () => "pong");
+  ipcMain.handle("channel1", async function () {
+    console.log("[debug handleIPC channel1]");
   });
 }

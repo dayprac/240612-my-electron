@@ -14,17 +14,6 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <div>
-        <h1>测试插件</h1>
-        <button
-          onClick={async () => {
-            console.log("Running in Electron?", window?.electron);
-            window.electron.loadExtension();
-          }}
-        >
-          加载插件
-        </button>
-      </div>
     </>
   );
 }
