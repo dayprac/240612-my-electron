@@ -1,4 +1,3 @@
-import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
@@ -13,6 +12,27 @@ function App() {
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
+        <div>
+          <div>
+            <button
+              onClick={() => {
+                console.log("[获取rootPath]", window?.electron?.rootPath());
+              }}
+            >
+              获取rootPath
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                const extension = await window?.electron.loadExtension();
+                console.log("[加载插件]", extension);
+              }}
+            >
+              加载插件
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
