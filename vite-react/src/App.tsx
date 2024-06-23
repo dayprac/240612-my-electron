@@ -32,6 +32,17 @@ function App() {
               加载插件
             </button>
           </div>
+          <div>
+            <button
+              onClick={async () => {
+                setTimeout(() => {
+                  window?.electron.newWindow();
+                }, 5000);
+              }}
+            >
+              新窗口
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -28,6 +28,22 @@ function handleIPC() {
   ipcMain.handle("channel1", async (event, args) => {
     console.log("[debug handleIPC channel1]", event, args);
   });
+  ipcMain.handle("new-window", async () => {
+    const window = new BrowserWindow({
+      width: 200,
+      height: 200,
+      webPreferences: {
+        nodeIntegration: true,
+        preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
+      },
+    });
+    window.loadFile(
+      path.join(__dirname.split("app.asar")[0], "renderer/new-window.html")
+    );
+    setTimeout(() => {
+      window.close();
+    }, 5000);
+  });
   ipcMain.handle("load-extension", async () => {
     // 窗口出现后再加载加载项没有实际效果
     // 这里的代码只是为了测试加载项目录对不对（窗口出现前加载插件，如果目录不对会导致白屏）

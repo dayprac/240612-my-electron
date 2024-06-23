@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("electron", {
   // 打包后 /Users/qianzhiqiang/bijoux/0602/my-electron/out/my-electron-darwin-x64/my-electron.app/Contents/Resources/
   rootPath: () => __dirname.split("app.asar")[0],
   ping: () => ipcRenderer.invoke("ping"),
+  newWindow: () => ipcRenderer.invoke("new-window"),
   loadExtension: () => ipcRenderer.invoke("load-extension"),
   channel1: () => ipcRenderer.invoke("channel1"),
 });
