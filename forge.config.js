@@ -4,7 +4,7 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = {
   packagerConfig: {
     asar: true,
-    extraResource: ["./minimal-chrome-extension"],
+    extraResource: ["./minimal-chrome-extension", "./renderer"],
   },
   rebuildConfig: {},
   makers: [

@@ -1,16 +1,20 @@
 // window
-const { app, session, BrowserWindow, ipcMain } = require("electron");
+const { app, session, BrowserWindow, ipcMain, screen } = require("electron");
 const path = require("path");
 
 app.whenReady().then(async () => {
   const window = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
-      preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
+      contextIsolation: true,
+      // preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
     },
   });
   // console.log(app.getPath("userData")); // /Users/qianzhiqiang/Library/Application Support/my-electron
-  let extensionPath = path.join(__dirname.split("app.asar")[0], "minimal-chrome-extension");
+  let extensionPath = path.join(
+    __dirname.split("app.asar")[0],
+    "minimal-chrome-extension"
+  );
   const extension = await session.defaultSession.loadExtension(
     extensionPath,
     // allowFileAccess is required to load the devtools extension on file:// URLs.
@@ -18,8 +22,11 @@ app.whenReady().then(async () => {
   );
   console.log("[debug extension loaded]", extension);
   // window.loadFile("./minimal-chrome-extension/demo.html");
-  window.loadURL("http://localhost:6131/");
-  // window.loadFile(__dirname.split("app.asar")[0] + "/renderer/video.html");
+  // window.loadURL("http://localhost:6131/");
+  // window.loadURL("http://localhost:5175/");
+  window.loadFile(
+    path.join(__dirname.split("app.asar")[0], "renderer/explore-displays.html")
+  );
   handleIPC();
 });
 
@@ -43,6 +50,11 @@ function handleIPC() {
     setTimeout(() => {
       window.close();
     }, 5000);
+  });
+  ipcMain.handle("get-all-displays", async () => {
+    let displays = screen.getAllDisplays();
+    // console.log("[debug displays]", displays);
+    return displays;
   });
   ipcMain.handle("load-extension", async () => {
     // 窗口出现后再加载加载项没有实际效果
