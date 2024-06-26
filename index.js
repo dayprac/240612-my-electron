@@ -2,11 +2,18 @@
 const { app, session, BrowserWindow, ipcMain, screen } = require("electron");
 const path = require("path");
 
+const { micDemo } = require("./mic");
+
 app.whenReady().then(async () => {
   const window = new BrowserWindow({
+    width: 150,
+    height: 300,
+    // transparent: true,
+    // frame: false,
+    backgroundColor: "#00000000",
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: true,
+      contextIsolation: false,
       // preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
     },
   });
@@ -23,10 +30,18 @@ app.whenReady().then(async () => {
   console.log("[debug extension loaded]", extension);
   // window.loadFile("./minimal-chrome-extension/demo.html");
   // window.loadURL("http://localhost:6131/");
-  // window.loadURL("http://localhost:5175/");
-  window.loadFile(
-    path.join(__dirname.split("app.asar")[0], "renderer/explore-displays.html")
-  );
+  // window.loadFile(
+  //   path.join(__dirname.split("app.asar")[0], "renderer/explore-displays.html")
+  // );
+  window.setAlwaysOnTop(true);
+  window.setVisibleOnAllWorkspaces(true, {
+    visibleOnFullScreen: true,
+  });
+  window.loadURL("http://localhost:5175/");
+  micDemo((keyWordName) => {
+    console.log("[app keyWordName]", keyWordName);
+    window.webContents.send("onanii", keyWordName);
+  });
   handleIPC();
 });
 

@@ -13,6 +13,8 @@
   "author": "Qian Zhiqiang",
   "license": "ISC",
   "dependencies": {
+    "@picovoice/porcupine-node": "^3.0.2",
+    "@picovoice/pvrecorder-node": "^1.2.2",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {
