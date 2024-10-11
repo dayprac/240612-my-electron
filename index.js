@@ -1,101 +1,92 @@
-// window
-const { app, session, BrowserWindow, ipcMain, screen } = require("electron");
+const { app, Tray, Menu, BrowserWindow } = require("electron");
 const path = require("path");
 
-const { micDemo } = require("./mic");
+let tray = null;
 
 app.whenReady().then(async () => {
-  const window = new BrowserWindow({
-    width: 150,
-    height: 300,
-    // transparent: true,
-    // frame: false,
-    backgroundColor: "#00000000",
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      // preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
-    },
-  });
-  // console.log(app.getPath("userData")); // /Users/qianzhiqiang/Library/Application Support/my-electron
-  let extensionPath = path.join(
+  const iconPath = path.join(
     __dirname.split("app.asar")[0],
-    "minimal-chrome-extension"
+    "images",
+    "icon.png"
   );
-  const extension = await session.defaultSession.loadExtension(
-    extensionPath,
-    // allowFileAccess is required to load the devtools extension on file:// URLs.
-    { allowFileAccess: true }
-  );
-  console.log("[debug extension loaded]", extension);
-  // window.loadFile("./minimal-chrome-extension/demo.html");
-  // window.loadURL("http://localhost:6131/");
-  // window.loadFile(
-  //   path.join(__dirname.split("app.asar")[0], "renderer/explore-displays.html")
-  // );
-  window.setAlwaysOnTop(true);
-  window.setVisibleOnAllWorkspaces(true, {
-    visibleOnFullScreen: true,
-  });
-  window.loadURL("http://localhost:5175/");
-  micDemo((keyWordName) => {
-    console.log("[app keyWordName]", keyWordName);
-    window.webContents.send("onanii", keyWordName);
-  });
-  handleIPC();
+  tray = new Tray(iconPath);
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "Item1", type: "radio" },
+    { label: "Item2", type: "radio" },
+    { label: "Item3", type: "radio", checked: true },
+    { label: "Item4", type: "radio" },
+  ]);
+  tray.setToolTip("This is my application.");
+  tray.setContextMenu(contextMenu);
+  // tray.setTitle("hello");
+
+  // Setting up a variety of color code constants
+  const RED = "\u001b[31m";
+  const BLUE = "\u001b[34m";
+  const WHITE_CYAN = "\u001b[37;46m";
+  const RED_YELLOW = "\u001b[31;43m";
+  const PINK = "\u001b[38;5;201m";
+  const LAVENDER = "\u001b[38;5;147m";
+  const AQUA = "\u001b[38;2;145;231;255m";
+  const PENCIL = "\u001b[38;2;253;182;0m";
+
+  // Change the color constant below and see what happens!
+  // console.log(RED + "I'm a chameleon.");
+  // tray.setTitle(RED + "I'm a chameleon.");
+
+  // Printing with multiple colors
+  // console.log(PENCIL + "Look " + BLUE + "at " + PINK + "me " + AQUA + "go!");
+  // tray.setTitle(RED + "Look " + BLUE + "at " + RED + "me " + BLUE + "go!");
+
+  // setInterval(() => {
+  //   tray.setTitle(
+  //     new Date().toLocaleString("zh-CN", {
+  //       timeZone: "Asia/Shanghai",
+  //     })
+  //   );
+  // }, 1000);
+
+  const setIntervalImmediately = (func, interval) => {
+    func();
+    return setInterval(func, interval);
+  };
+
+  let isTomato = false;
+  // const tomatoLimit = 10 * 60;
+  const tomatoLimit = 5;
+  let tomatoTick = 0;
+  let isBreak = false;
+  // const breakLimit = 2 * 60;
+  const breakLimit = 3;
+  let breakTick = 0;
+
+  isTomato = true;
+
+  setIntervalImmediately(() => {
+    if (isTomato) {
+      if (tomatoTick < tomatoLimit) {
+        tray.setTitle(tomatoTick.toString(), { fontType: "monospaced" });
+        tomatoTick += 1;
+      } else {
+        tomatoTick = 0;
+        isTomato = false;
+        isBreak = true;
+        breakTick = 0;
+        tray.setTitle(RED + breakTick.toString(), { fontType: "monospaced" });
+        breakTick = 1;
+      }
+    } else {
+      if (breakTick < breakLimit) {
+        tray.setTitle(RED + breakTick.toString(), { fontType: "monospaced" });
+        breakTick += 1;
+      } else {
+        breakTick = 0;
+        isBreak = false;
+        isTomato = true;
+        tomatoTick = 0;
+        tray.setTitle(tomatoTick.toString(), { fontType: "monospaced" });
+        tomatoTick = 1;
+      }
+    }
+  }, 1000);
 });
-
-function handleIPC() {
-  ipcMain.handle("ping", () => "pong");
-  ipcMain.handle("channel1", async (event, args) => {
-    console.log("[debug handleIPC channel1]", event, args);
-  });
-  ipcMain.handle("new-window", async () => {
-    const window = new BrowserWindow({
-      width: 200,
-      height: 200,
-      webPreferences: {
-        nodeIntegration: true,
-        preload: path.join(__dirname, "window-preload.js"), // Appropriate path to the file in your own project
-      },
-    });
-    window.loadFile(
-      path.join(__dirname.split("app.asar")[0], "renderer/new-window.html")
-    );
-    setTimeout(() => {
-      window.close();
-    }, 5000);
-  });
-  ipcMain.handle("get-all-displays", async () => {
-    let displays = screen.getAllDisplays();
-    // console.log("[debug displays]", displays);
-    return displays;
-  });
-  ipcMain.handle("load-extension", async () => {
-    // 窗口出现后再加载加载项没有实际效果
-    // 这里的代码只是为了测试加载项目录对不对（窗口出现前加载插件，如果目录不对会导致白屏）
-    console.log("[debug handleIPC load-extension __dirname]", __dirname);
-    let extensionPath = path.join(
-      __dirname.split("app.asar")[0],
-      "/minimal-chrome-extension"
-    );
-    // if (__dirname.includes("app.asar")) {
-    //   extensionPath = path.join()
-    //     __dirname.split("app.asar")[0] + "minimal-chrome-extension";
-    // }
-    // /Users/qianzhiqiang/bijoux/0602/my-electron/out/my-electron-darwin-x64/my-electron.app/Contents/Resources/app.asar
-    // return __dirname;
-    // return {
-    //   extensionPath,
-    //   node_env: process.env.NODE_ENV,
-    // };
-
-    const extension = await session.defaultSession.loadExtension(
-      extensionPath,
-      // allowFileAccess is required to load the devtools extension on file:// URLs.
-      { allowFileAccess: true }
-    );
-    console.log(extension);
-    return extension;
-  });
-}
