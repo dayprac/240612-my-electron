@@ -11,16 +11,27 @@ const pomodoro = new Pomodoro({
     console.log(`break (${obj.id}): `, obj.count, `isPause: ${obj.isPause}`);
   },
 });
-pomodoro.start();
 
-setTimeout(() => {
-  // console.log("[debug try pomodoro.current.id]", pomodoro.current.id);
-  // return;
-  pomodoro.pause();
+function test中途停止() {
+  pomodoro.start();
+
   setTimeout(() => {
-    pomodoro.continue();
+    pomodoro.pause();
     setTimeout(() => {
-      pomodoro.stop();
+      pomodoro.continue();
+      setTimeout(() => {
+        pomodoro.stop();
+      }, 5000);
     }, 5000);
-  }, 5000);
-}, 8000);
+  }, 8000);
+}
+
+function test结束后持续() {
+  pomodoro.onAllOver(() => {
+    console.log("[debug onAllOver]");
+  });
+  pomodoro.start();
+}
+
+// test中途停止();
+test结束后持续();

@@ -25,10 +25,8 @@ class CountDown {
         this.count += 1;
       } else {
         clearInterval(this.intervalId);
-        if (this.next) {
-          if (this.config.pomodoro) {
-            this.config.pomodoro.onCountDownCompleted(this.next);
-          }
+        if (this.config.pomodoro) {
+          this.config.pomodoro.onCountDownCompleted(this.next);
         }
       }
     }, 1000);
@@ -103,17 +101,21 @@ class Pomodoro {
     }
     this.countList = countList;
     this.current = null;
-    // setIntervalImmediately(() => {
-    //   if (this.current) {
-    //     console.log("[debug 定时器 current.id]", this.current.id);
-    //   }
-    // }, 1000);
   }
   onCountDownCompleted(next) {
-    console.log("[dbug pomodoro next.id]", next.id);
-    this.current = next;
-    console.log("[dbug pomodoro current.id]", this.current.id);
-    this.current.start();
+    if (next) {
+      console.log("[debug pomodoro next.id]", next.id);
+      this.current = next;
+      console.log("[debug pomodoro current.id]", this.current.id);
+      this.current.start();
+    } else {
+      if (this.onAllOverFn) {
+        this.onAllOverFn();
+      }
+    }
+  }
+  onAllOver(fn) {
+    this.onAllOverFn = fn;
   }
   start() {
     // console.log("[debug pomodoro start countList]", this.countList);
@@ -122,21 +124,14 @@ class Pomodoro {
   }
   pause() {
     this.current.pause();
-    // for (let i = 0; i < this.countList.length; i++) {
-    //   this.countList[i].pause();
-    // }
   }
   continue() {
     this.current.continue();
-    // for (let i = 0; i < this.countList.length; i++) {
-    //   this.countList[i].continue();
-    // }
   }
   stop() {
-    this.current.stop();
-    // for (let i = 0; i < this.countList.length; i++) {
-    //   this.countList[i].stop();
-    // }
+    if (this.current) {
+      this.current.stop();
+    }
   }
 }
 

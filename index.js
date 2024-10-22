@@ -3,6 +3,7 @@ const path = require("path");
 const { Pomodoro } = require("./util");
 
 let tray = null;
+let contextMenu = null;
 let pomodoro = null;
 
 app.whenReady().then(async () => {
@@ -12,10 +13,11 @@ app.whenReady().then(async () => {
     "icon.png"
   );
   tray = new Tray(iconPath);
-  const contextMenu = Menu.buildFromTemplate([
+  const template = [
     {
       label: "开始",
       click: () => {
+        const BLUE = "\u001b[34m";
         const RED = "\u001b[31m";
 
         const formatCount2MS = (count, limit) => {
@@ -27,10 +29,13 @@ app.whenReady().then(async () => {
           );
         };
 
-        const pomodoro = new Pomodoro({
-          total: 4,
-          workTime: 5,
-          breakTime: 2,
+        pomodoro = new Pomodoro({
+          // total: 4,
+          // workTime: 5,
+          // breakTime: 2,
+          total: 1,
+          workTime: 10 * 60,
+          breakTime: 2 * 60,
           workFormatter: (obj) => {
             // console.log("work: ", obj.count);
             tray.setTitle(formatCount2MS(obj.count, obj.limit), {
@@ -39,18 +44,48 @@ app.whenReady().then(async () => {
           },
           breakFormatter: (obj) => {
             // console.log("break: ", obj.count);
-            tray.setTitle(RED + formatCount2MS(obj.count, obj.limit), {
+            tray.setTitle(BLUE + formatCount2MS(obj.count, obj.limit), {
               fontType: "monospaced",
             });
           },
+        });
+        pomodoro.onAllOver(() => {
+          tray.setTitle(RED + "over", {
+            fontType: "monospaced",
+          });
         });
         pomodoro.start();
       },
     },
     {
       label: "暂停",
+      id: "pause",
       click: () => {
         pomodoro.pause();
+        const pauseMenuItem = contextMenu.items.filter(
+          (i) => i.id === "pause"
+        )[0];
+        const continueMenuItem = contextMenu.items.filter(
+          (i) => i.id === "continue"
+        )[0];
+        pauseMenuItem.visible = false;
+        continueMenuItem.visible = true;
+      },
+    },
+    {
+      label: "继续",
+      id: "continue",
+      visible: false,
+      click: () => {
+        pomodoro.continue();
+        const pauseMenuItem = contextMenu.items.filter(
+          (i) => i.id === "pause"
+        )[0];
+        const continueMenuItem = contextMenu.items.filter(
+          (i) => i.id === "continue"
+        )[0];
+        pauseMenuItem.visible = true;
+        continueMenuItem.visible = false;
       },
     },
     {
@@ -59,6 +94,7 @@ app.whenReady().then(async () => {
         pomodoro.stop();
       },
     },
-  ]);
+  ];
+  contextMenu = Menu.buildFromTemplate(template);
   tray.setContextMenu(contextMenu);
 });
