@@ -6,9 +6,9 @@ const setIntervalImmediately = (func, interval) => {
 class CountDown {
   constructor(config) {
     this.id = Math.floor(Math.random() * 1000) + 1;
+    this.config = config;
     this.count = 0;
     this.limit = config.limit;
-    this.onCompleted = config.onCompleted;
     this.intervalId = null;
     this.isPause = false;
     this.formatter = (obj) => {
@@ -26,8 +26,8 @@ class CountDown {
       } else {
         clearInterval(this.intervalId);
         if (this.next) {
-          if (this.onCompleted) {
-            this.onCompleted(this.next);
+          if (this.config.pomodoro) {
+            this.config.pomodoro.onCountDownCompleted(this.next);
           }
         }
       }
@@ -70,7 +70,7 @@ class Pomodoro {
     for (let i = 0; i < config.total; i++) {
       const count = new CountDown({
         limit: config.workTime,
-        onCompleted: this.onCountDownCompleted,
+        pomodoro: this,
       });
       if (config.workFormatter) {
         count.setFormatter((obj) => {
@@ -87,7 +87,7 @@ class Pomodoro {
       countList.push(count);
       const countBreak = new CountDown({
         limit: config.breakTime,
-        onCompleted: this.onCountDownCompleted,
+        pomodoro: this,
       });
       if (config.breakFormatter) {
         countBreak.setFormatter((obj) => {
@@ -103,11 +103,11 @@ class Pomodoro {
     }
     this.countList = countList;
     this.current = null;
-    setIntervalImmediately(() => {
-      if (this.current) {
-        console.log("[debug 定时器 current.id]", this.current.id);
-      }
-    }, 1000);
+    // setIntervalImmediately(() => {
+    //   if (this.current) {
+    //     console.log("[debug 定时器 current.id]", this.current.id);
+    //   }
+    // }, 1000);
   }
   onCountDownCompleted(next) {
     console.log("[dbug pomodoro next.id]", next.id);

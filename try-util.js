@@ -14,8 +14,8 @@ const pomodoro = new Pomodoro({
 pomodoro.start();
 
 setTimeout(() => {
-  console.log("[debug try pomodoro.current.id]", pomodoro.current.id);
-  return;
+  // console.log("[debug try pomodoro.current.id]", pomodoro.current.id);
+  // return;
   pomodoro.pause();
   setTimeout(() => {
     pomodoro.continue();
