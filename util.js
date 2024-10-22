@@ -1,0 +1,143 @@
+const setIntervalImmediately = (func, interval) => {
+  func();
+  return setInterval(func, interval);
+};
+
+class CountDown {
+  constructor(config) {
+    this.id = Math.floor(Math.random() * 1000) + 1;
+    this.count = 0;
+    this.limit = config.limit;
+    this.onCompleted = config.onCompleted;
+    this.intervalId = null;
+    this.isPause = false;
+    this.formatter = (obj) => {
+      console.log(obj.count.toString());
+    };
+    this.next = null;
+  }
+  start() {
+    this.intervalId = setIntervalImmediately(() => {
+      // console.log("[debug CountDown id]", this.id);
+      if (this.isPause) return;
+      if (this.count < this.limit) {
+        this.formatter(this);
+        this.count += 1;
+      } else {
+        clearInterval(this.intervalId);
+        if (this.next) {
+          if (this.onCompleted) {
+            this.onCompleted(this.next);
+          }
+        }
+      }
+    }, 1000);
+  }
+  pause() {
+    console.log("[debug CountDown 1 pause id]", this.id);
+    this.isPause = true;
+    console.log(
+      "[debug CountDown 2 pause id, isPause, count]",
+      this.id,
+      this.isPause,
+      this.count
+    );
+  }
+  continue() {
+    this.isPause = false;
+  }
+  stop() {
+    clearInterval(this.intervalId);
+  }
+  setFormatter(formatter) {
+    this.formatter = formatter;
+  }
+  setNext(next) {
+    this.next = next;
+  }
+}
+
+const formatCount2MS = (count, limit) => {
+  let left = limit - count;
+  let m = Math.floor(left / 60);
+  let s = left - m * 60;
+  return m.toString().padStart(2, "0") + ":" + s.toString().padStart(2, "0");
+};
+
+class Pomodoro {
+  constructor(config) {
+    let countList = [];
+    for (let i = 0; i < config.total; i++) {
+      const count = new CountDown({
+        limit: config.workTime,
+        onCompleted: this.onCountDownCompleted,
+      });
+      if (config.workFormatter) {
+        count.setFormatter((obj) => {
+          config.workFormatter(obj);
+        });
+      } else {
+        count.setFormatter((obj) => {
+          console.log(formatCount2MS(obj.count, obj.limit));
+        });
+      }
+      if (countList.length > 0) {
+        countList[countList.length - 1].setNext(count);
+      }
+      countList.push(count);
+      const countBreak = new CountDown({
+        limit: config.breakTime,
+        onCompleted: this.onCountDownCompleted,
+      });
+      if (config.breakFormatter) {
+        countBreak.setFormatter((obj) => {
+          config.breakFormatter(obj);
+        });
+      } else {
+        countBreak.setFormatter((obj) => {
+          console.log(formatCount2MS(obj.count, obj.limit));
+        });
+      }
+      count.setNext(countBreak);
+      countList.push(countBreak);
+    }
+    this.countList = countList;
+    this.current = null;
+    setIntervalImmediately(() => {
+      if (this.current) {
+        console.log("[debug 定时器 current.id]", this.current.id);
+      }
+    }, 1000);
+  }
+  onCountDownCompleted(next) {
+    console.log("[dbug pomodoro next.id]", next.id);
+    this.current = next;
+    console.log("[dbug pomodoro current.id]", this.current.id);
+    this.current.start();
+  }
+  start() {
+    // console.log("[debug pomodoro start countList]", this.countList);
+    this.current = this.countList[0];
+    this.current.start();
+  }
+  pause() {
+    this.current.pause();
+    // for (let i = 0; i < this.countList.length; i++) {
+    //   this.countList[i].pause();
+    // }
+  }
+  continue() {
+    this.current.continue();
+    // for (let i = 0; i < this.countList.length; i++) {
+    //   this.countList[i].continue();
+    // }
+  }
+  stop() {
+    this.current.stop();
+    // for (let i = 0; i < this.countList.length; i++) {
+    //   this.countList[i].stop();
+    // }
+  }
+}
+
+module.exports = { CountDown, Pomodoro };
