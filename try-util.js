@@ -29,6 +29,17 @@ function test中途停止() {
 function test结束后持续() {
   pomodoro.onAllOver(() => {
     console.log("[debug onAllOver]");
+    const foreverCountdown = new CountDown({
+      limit: 24 * 60,
+      pomodoro: this,
+    });
+    foreverCountdown.setFormatter((obj) => {
+      console.log(`结束后无限计时：${obj.count}`);
+    });
+    pomodoro.countList.push(foreverCountdown);
+    pomodoro.current = foreverCountdown;
+
+    pomodoro.current.start();
   });
   pomodoro.start();
 }

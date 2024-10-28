@@ -1,6 +1,6 @@
-const { app, Tray, Menu, BrowserWindow } = require("electron");
+const { app, Tray, Menu, dialog } = require("electron");
 const path = require("path");
-const { Pomodoro } = require("./util");
+const { Pomodoro, CountDown } = require("./util");
 
 let tray = null;
 let contextMenu = null;
@@ -21,19 +21,22 @@ app.whenReady().then(async () => {
         const RED = "\u001b[31m";
 
         const formatCount2MS = (count, limit) => {
-          let left = limit - count;
-          let m = Math.floor(left / 60);
-          let s = left - m * 60;
+          let seconds = count;
+          if (limit) {
+            seconds = limit - count;
+          }
+          let m = Math.floor(seconds / 60);
+          let s = seconds - m * 60;
           return (
             m.toString().padStart(2, "0") + ":" + s.toString().padStart(2, "0")
           );
         };
 
         pomodoro = new Pomodoro({
-          // total: 4,
+          // total: 2,
           // workTime: 5,
           // breakTime: 2,
-          total: 1,
+          total: 2,
           workTime: 10 * 60,
           breakTime: 2 * 60,
           workFormatter: (obj) => {
@@ -50,9 +53,37 @@ app.whenReady().then(async () => {
           },
         });
         pomodoro.onAllOver(() => {
-          tray.setTitle(RED + "over", {
-            fontType: "monospaced",
+          console.log("[debug onAllOver]");
+          dialog.showMessageBox({
+            //   icon: "icon.png",
+            type: "info",
+            title: "消息标题", // 可能不显示
+            message: "番茄周期结束",
+            detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
+            buttons: ["确定"],
           });
+
+          const foreverCountdown = new CountDown({
+            limit: 24 * 60,
+            pomodoro: this,
+          });
+
+          foreverCountdown.setFormatter((obj) => {
+            // console.log(`结束后无限计时：${obj.count}`);
+            if (obj.count % 2 === 0) {
+              tray.setTitle(RED + formatCount2MS(obj.count), {
+                fontType: "monospaced",
+              });
+            } else {
+              tray.setTitle(formatCount2MS(obj.count), {
+                fontType: "monospaced",
+              });
+            }
+          });
+          pomodoro.countList.push(foreverCountdown);
+          pomodoro.current = foreverCountdown;
+
+          pomodoro.current.start();
         });
         pomodoro.start();
       },
@@ -92,6 +123,7 @@ app.whenReady().then(async () => {
       label: "结束",
       click: () => {
         pomodoro.stop();
+        tray.setTitle("");
       },
     },
   ];
