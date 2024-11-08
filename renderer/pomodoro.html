@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .work {
+            font-size: 25px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="action">
+        <span>Pomodoro</span>
+        <button class="pomodoro-start">启动</button>
+        <button class="pomodoro-pause-continue">暂停/继续</button>
+        <button class="pomodoro-stop">结束</button>
+    </div>
+    <div>
+        <span class="time-display work"></span>
+    </div>
+    <div>
+        <span class="time-display break"></span>
+    </div>
+    <script>
+        const { dialog } = require("electron");
+        const { CountDown, Pomodoro } = require("../util.js");
+    </script>
+    <script src="./pomodoro.js"></script>
+</body>
+
+</html>

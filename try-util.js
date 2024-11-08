@@ -10,6 +10,23 @@ const pomodoro = new Pomodoro({
   breakFormatter: (obj) => {
     console.log(`break (${obj.id}): `, obj.count, `isPause: ${obj.isPause}`);
   },
+  onCountDownCompleted(next) {
+    // console.log("[config this,next]", this, next);
+    if (next) {
+      if (this.current.kind === "work") {
+      } else if (this.current.kind === "break") {
+      }
+
+      console.log("[debug pomodoro next.kind, next.id]", next.kind, next.id);
+      this.current = next;
+      console.log("[debug pomodoro current.id]", this.current.id);
+      this.current.start();
+    } else {
+      if (this.onAllOverFn) {
+        this.onAllOverFn();
+      }
+    }
+  },
 });
 
 function test中途停止() {

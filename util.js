@@ -5,9 +5,10 @@ const setIntervalImmediately = (func, interval) => {
 
 class CountDown {
   constructor(config) {
+    this.kind = config.kind;
     this.id = Math.floor(Math.random() * 1000) + 1;
     this.config = config;
-    this.count = 0;
+    this.count = -1; // start后，立即执行设为0，一个tick结束后，加1
     this.limit = config.limit;
     this.intervalId = null;
     this.isPause = false;
@@ -20,10 +21,9 @@ class CountDown {
     this.intervalId = setIntervalImmediately(() => {
       // console.log("[debug CountDown id]", this.id);
       if (this.isPause) return;
-      if (this.count < this.limit) {
-        this.formatter(this);
-        this.count += 1;
-      } else {
+      this.count += 1;
+      this.formatter(this);
+      if (this.count === this.limit) {
         clearInterval(this.intervalId);
         if (this.config.pomodoro) {
           this.config.pomodoro.onCountDownCompleted(this.next);
@@ -64,9 +64,11 @@ const formatCount2MS = (count, limit) => {
 
 class Pomodoro {
   constructor(config) {
+    this.config = config;
     let countList = [];
     for (let i = 0; i < config.total; i++) {
       const count = new CountDown({
+        kind: "work",
         limit: config.workTime,
         pomodoro: this,
       });
@@ -84,6 +86,7 @@ class Pomodoro {
       }
       countList.push(count);
       const countBreak = new CountDown({
+        kind: "break",
         limit: config.breakTime,
         pomodoro: this,
       });
@@ -101,16 +104,22 @@ class Pomodoro {
     }
     this.countList = countList;
     this.current = null;
+    this.isPaused = false;
   }
   onCountDownCompleted(next) {
-    if (next) {
-      console.log("[debug pomodoro next.id]", next.id);
-      this.current = next;
-      console.log("[debug pomodoro current.id]", this.current.id);
-      this.current.start();
+    if (this.config.onCountDownCompleted) {
+      const _onCountDownCompleted = this.config.onCountDownCompleted.bind(this);
+      _onCountDownCompleted(next);
     } else {
-      if (this.onAllOverFn) {
-        this.onAllOverFn();
+      if (next) {
+        console.log("[debug pomodoro next.id]", next.id);
+        this.current = next;
+        console.log("[debug pomodoro current.id]", this.current.id);
+        this.current.start();
+      } else {
+        if (this.onAllOverFn) {
+          this.onAllOverFn();
+        }
       }
     }
   }
@@ -124,9 +133,11 @@ class Pomodoro {
   }
   pause() {
     this.current.pause();
+    this.isPaused = true;
   }
   continue() {
     this.current.continue();
+    this.isPaused = false;
   }
   stop() {
     if (this.current) {

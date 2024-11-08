@@ -1,4 +1,4 @@
-const { app, Tray, Menu, dialog } = require("electron");
+const { BrowserWindow, app, Tray, Menu, dialog } = require("electron");
 const path = require("path");
 const { Pomodoro, CountDown } = require("./util");
 
@@ -129,4 +129,14 @@ app.whenReady().then(async () => {
   ];
   contextMenu = Menu.buildFromTemplate(template);
   tray.setContextMenu(contextMenu);
+
+  const window = new BrowserWindow({
+    width: 500,
+    height: 300,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+  window.loadFile("./renderer/pomodoro.html");
 });
