@@ -9,6 +9,10 @@
         .work {
             font-size: 25px;
         }
+
+        .index {
+            font-size: 15px;
+        }
     </style>
 </head>
 
@@ -21,13 +25,14 @@
     </div>
     <div>
         <span class="time-display work"></span>
+        <span class="index"></span>
     </div>
     <div>
         <span class="time-display break"></span>
     </div>
     <script>
         const { dialog } = require("electron");
-        const { CountDown, Pomodoro } = require("../util.js");
+        const { CountDown2, Pomodoro2 } = require("../util.js");
     </script>
     <script src="./pomodoro.js"></script>
 </body>

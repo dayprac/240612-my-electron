@@ -1,6 +1,6 @@
 const { BrowserWindow, app, Tray, Menu, dialog } = require("electron");
 const path = require("path");
-const { Pomodoro, CountDown } = require("./util");
+const { Pomodoro2, CountDown2 } = require("./util");
 
 let tray = null;
 let contextMenu = null;
@@ -32,58 +32,117 @@ app.whenReady().then(async () => {
           );
         };
 
-        pomodoro = new Pomodoro({
-          // total: 2,
-          // workTime: 5,
-          // breakTime: 2,
-          total: 2,
-          workTime: 10 * 60,
-          breakTime: 2 * 60,
-          workFormatter: (obj) => {
-            // console.log("work: ", obj.count);
-            tray.setTitle(formatCount2MS(obj.count, obj.limit), {
-              fontType: "monospaced",
-            });
-          },
-          breakFormatter: (obj) => {
-            // console.log("break: ", obj.count);
-            tray.setTitle(BLUE + formatCount2MS(obj.count, obj.limit), {
-              fontType: "monospaced",
-            });
-          },
-        });
-        pomodoro.onAllOver(() => {
-          console.log("[debug onAllOver]");
-          dialog.showMessageBox({
-            //   icon: "icon.png",
-            type: "info",
-            title: "消息标题", // 可能不显示
-            message: "番茄周期结束",
-            detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
-            buttons: ["确定"],
-          });
+        // pomodoro = new Pomodoro({
+        //   // total: 2,
+        //   // workTime: 5,
+        //   // breakTime: 2,
+        //   total: 2,
+        //   workTime: 10 * 60,
+        //   breakTime: 2 * 60,
+        //   workFormatter: (obj) => {
+        //     // console.log("work: ", obj.count);
+        //     tray.setTitle(formatCount2MS(obj.count, obj.limit), {
+        //       fontType: "monospaced",
+        //     });
+        //   },
+        //   breakFormatter: (obj) => {
+        //     // console.log("break: ", obj.count);
+        //     tray.setTitle(BLUE + formatCount2MS(obj.count, obj.limit), {
+        //       fontType: "monospaced",
+        //     });
+        //   },
+        // });
+        // pomodoro.onAllOver(() => {
+        //   console.log("[debug onAllOver]");
+        //   dialog.showMessageBox({
+        //     //   icon: "icon.png",
+        //     type: "info",
+        //     title: "消息标题", // 可能不显示
+        //     message: "番茄周期结束",
+        //     detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
+        //     buttons: ["确定"],
+        //   });
 
-          const foreverCountdown = new CountDown({
-            limit: 24 * 60,
-            pomodoro: this,
-          });
+        //   const foreverCountdown = new CountDown({
+        //     limit: 24 * 60,
+        //     pomodoro: this,
+        //   });
 
-          foreverCountdown.setFormatter((obj) => {
-            // console.log(`结束后无限计时：${obj.count}`);
-            if (obj.count % 2 === 0) {
-              tray.setTitle(RED + formatCount2MS(obj.count), {
+        //   foreverCountdown.setFormatter((obj) => {
+        //     // console.log(`结束后无限计时：${obj.count}`);
+        //     if (obj.count % 2 === 0) {
+        //       tray.setTitle(RED + formatCount2MS(obj.count), {
+        //         fontType: "monospaced",
+        //       });
+        //     } else {
+        //       tray.setTitle(formatCount2MS(obj.count), {
+        //         fontType: "monospaced",
+        //       });
+        //     }
+        //   });
+        //   pomodoro.countList.push(foreverCountdown);
+        //   pomodoro.current = foreverCountdown;
+
+        //   pomodoro.current.start();
+        // });
+        // pomodoro.start();
+        pomodoro = new Pomodoro2({
+          periods: 2,
+          workTime: 5,
+          breakTime: 2,
+          onWorkTick(_pomodoro, _countdown) {
+            tray.setTitle(
+              formatCount2MS(_countdown.count, _countdown.config.limit),
+              {
                 fontType: "monospaced",
-              });
-            } else {
-              tray.setTitle(formatCount2MS(obj.count), {
+              }
+            );
+          },
+          onBreakTick(_pomodoro, _countdown) {
+            tray.setTitle(
+              BLUE + formatCount2MS(_countdown.count, _countdown.config.limit),
+              {
                 fontType: "monospaced",
-              });
-            }
-          });
-          pomodoro.countList.push(foreverCountdown);
-          pomodoro.current = foreverCountdown;
-
-          pomodoro.current.start();
+              }
+            );
+          },
+          onOver(_pomodoro) {
+            console.log("[debug onOver]");
+            dialog.showMessageBox({
+              //   icon: "icon.png",
+              type: "info",
+              title: "消息标题", // 可能不显示
+              message: "番茄周期结束",
+              detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
+              buttons: ["确定"],
+            });
+            const foreverWarning = new CountDown2({
+              id: "forever",
+              onStart(_countdown) {
+                const index = _pomodoro.countDownList.findIndex(
+                  (i) => i.config.id === _countdown.config.id
+                );
+                _pomodoro.activeIndex = index;
+                console.log("[debug 全部结束后 onStart 开始无限计时]");
+                tray.setTitle(RED + "00:00", {
+                  fontType: "monospaced",
+                });
+              },
+              onTick(_countdown) {
+                if (_countdown.count % 2 === 0) {
+                  tray.setTitle(RED + formatCount2MS(_countdown.count), {
+                    fontType: "monospaced",
+                  });
+                } else {
+                  tray.setTitle(formatCount2MS(_countdown.count), {
+                    fontType: "monospaced",
+                  });
+                }
+              },
+            });
+            _pomodoro.countDownList.push(foreverWarning);
+            foreverWarning.start();
+          },
         });
         pomodoro.start();
       },
