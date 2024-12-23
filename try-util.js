@@ -1,70 +1,4 @@
-const { CountDown, Pomodoro, CountDown2, Pomodoro2 } = require("./util");
-
-const pomodoro = new Pomodoro({
-  total: 4,
-  workTime: 5,
-  breakTime: 2,
-  workFormatter: (obj) => {
-    console.log(`work (${obj.id}): `, obj.count, `isPause: ${obj.isPause}`);
-  },
-  breakFormatter: (obj) => {
-    console.log(`break (${obj.id}): `, obj.count, `isPause: ${obj.isPause}`);
-  },
-  onCountDownCompleted(next) {
-    // console.log("[config this,next]", this, next);
-    if (next) {
-      if (this.current.kind === "work") {
-      } else if (this.current.kind === "break") {
-      }
-
-      console.log("[debug pomodoro next.kind, next.id]", next.kind, next.id);
-      this.current = next;
-      console.log("[debug pomodoro current.id]", this.current.id);
-      this.current.start();
-    } else {
-      if (this.onAllOverFn) {
-        this.onAllOverFn();
-      }
-    }
-  },
-});
-
-function test中途停止() {
-  pomodoro.start();
-
-  setTimeout(() => {
-    pomodoro.pause();
-    setTimeout(() => {
-      pomodoro.continue();
-      setTimeout(() => {
-        pomodoro.stop();
-      }, 5000);
-    }, 5000);
-  }, 8000);
-}
-
-function test结束后持续() {
-  pomodoro.onAllOver(() => {
-    console.log("[debug onAllOver]");
-    const foreverCountdown = new CountDown({
-      limit: 24 * 60,
-      pomodoro: this,
-    });
-    foreverCountdown.setFormatter((obj) => {
-      console.log(`结束后无限计时：${obj.count}`);
-    });
-    pomodoro.countList.push(foreverCountdown);
-    pomodoro.current = foreverCountdown;
-
-    pomodoro.current.start();
-  });
-  pomodoro.start();
-}
-
-// test中途停止();
-// test结束后持续();
-
-// 重构后的版本
+const { CountDown, Pomodoro } = require("./util");
 
 const formatCount2MS = (count, limit) => {
   let left = limit - count;
@@ -74,7 +8,7 @@ const formatCount2MS = (count, limit) => {
 };
 
 function test单个CountDown() {
-  const countDown = new CountDown2({
+  const countDown = new CountDown({
     limit: 10,
     onStart(_countdown) {
       console.log(
@@ -96,7 +30,7 @@ function test多个CountDown() {
   const countDownList = [];
   let activeIndex = -1;
   for (let i = 0; i < 4; i++) {
-    const work = new CountDown2({
+    const work = new CountDown({
       id: 2 * i,
       limit: 5,
       onStart(_countdown) {
@@ -124,7 +58,7 @@ function test多个CountDown() {
       },
     });
     countDownList.push(work);
-    const midi = new CountDown2({
+    const midi = new CountDown({
       id: i * 2 + 1,
       limit: 2,
       onStart(_countdown) {
@@ -165,8 +99,8 @@ function test多个CountDown() {
   }, 8000);
 }
 
-function testPomodoro2() {
-  const pomodoro = new Pomodoro2({
+function testPomodoro() {
+  const pomodoro = new Pomodoro({
     periods: 4,
     workTime: 5,
     breakTime: 2,
@@ -178,7 +112,7 @@ function testPomodoro2() {
     },
     onOver(_pomodoro) {
       console.log("[debug onOver]");
-      const foreverWarning = new CountDown2({
+      const foreverWarning = new CountDown({
         id: "forever",
         onStart(_countdown) {
           const index = _pomodoro.countDownList.findIndex(
@@ -211,4 +145,4 @@ function testPomodoro2() {
 
 // test单个CountDown();
 // test多个CountDown();
-testPomodoro2();
+testPomodoro();

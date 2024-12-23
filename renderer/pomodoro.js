@@ -11,7 +11,7 @@ document.querySelector(".pomodoro-start").addEventListener("click", (event) => {
     return m.toString().padStart(2, "0") + ":" + s.toString().padStart(2, "0");
   };
 
-  pomodoro = new Pomodoro2({
+  pomodoro = new Pomodoro({
     periods: 4,
     workTime: 5,
     breakTime: 2,
@@ -37,7 +37,7 @@ document.querySelector(".pomodoro-start").addEventListener("click", (event) => {
       document.querySelector(".work").textContent = "";
       document.querySelector(".index").textContent = "";
       document.querySelector(".break").textContent = "";
-      const foreverWarning = new CountDown2({
+      const foreverWarning = new CountDown({
         id: "forever",
         onStart(_countdown) {
           const index = _pomodoro.countDownList.findIndex(
@@ -59,35 +59,6 @@ document.querySelector(".pomodoro-start").addEventListener("click", (event) => {
       foreverWarning.start();
     },
   });
-  // pomodoro.onAllOver(() => {
-  //   console.log("[debug onAllOver]");
-  //   // dialog.showMessageBox({
-  //   //   //   icon: "icon.png",
-  //   //   type: "info",
-  //   //   title: "消息标题", // 可能不显示
-  //   //   message: "番茄周期结束",
-  //   //   detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
-  //   //   buttons: ["确定"],
-  //   // });
-
-  //   const foreverCountdown = new CountDown({
-  //     limit: 24 * 60,
-  //     pomodoro: this,
-  //   });
-
-  //   foreverCountdown.setFormatter((obj) => {
-  //     // console.log(`结束后无限计时：${obj.count}`);
-  //     if (obj.count % 2 === 0) {
-  //       document.querySelector(".work").textContent = formatCount2MS(obj.count);
-  //     } else {
-  //       document.querySelector(".work").textContent = formatCount2MS(obj.count);
-  //     }
-  //   });
-  //   pomodoro.countList.push(foreverCountdown);
-  //   pomodoro.current = foreverCountdown;
-
-  //   pomodoro.current.start();
-  // });
   pomodoro.start();
 });
 

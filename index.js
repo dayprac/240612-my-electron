@@ -1,6 +1,6 @@
 const { BrowserWindow, app, Tray, Menu, dialog } = require("electron");
 const path = require("path");
-const { Pomodoro2, CountDown2 } = require("./util");
+const { Pomodoro, CountDown } = require("./util");
 
 let tray = null;
 let contextMenu = null;
@@ -32,64 +32,10 @@ app.whenReady().then(async () => {
           );
         };
 
-        // pomodoro = new Pomodoro({
-        //   // total: 2,
-        //   // workTime: 5,
-        //   // breakTime: 2,
-        //   total: 2,
-        //   workTime: 10 * 60,
-        //   breakTime: 2 * 60,
-        //   workFormatter: (obj) => {
-        //     // console.log("work: ", obj.count);
-        //     tray.setTitle(formatCount2MS(obj.count, obj.limit), {
-        //       fontType: "monospaced",
-        //     });
-        //   },
-        //   breakFormatter: (obj) => {
-        //     // console.log("break: ", obj.count);
-        //     tray.setTitle(BLUE + formatCount2MS(obj.count, obj.limit), {
-        //       fontType: "monospaced",
-        //     });
-        //   },
-        // });
-        // pomodoro.onAllOver(() => {
-        //   console.log("[debug onAllOver]");
-        //   dialog.showMessageBox({
-        //     //   icon: "icon.png",
-        //     type: "info",
-        //     title: "消息标题", // 可能不显示
-        //     message: "番茄周期结束",
-        //     detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
-        //     buttons: ["确定"],
-        //   });
-
-        //   const foreverCountdown = new CountDown({
-        //     limit: 24 * 60,
-        //     pomodoro: this,
-        //   });
-
-        //   foreverCountdown.setFormatter((obj) => {
-        //     // console.log(`结束后无限计时：${obj.count}`);
-        //     if (obj.count % 2 === 0) {
-        //       tray.setTitle(RED + formatCount2MS(obj.count), {
-        //         fontType: "monospaced",
-        //       });
-        //     } else {
-        //       tray.setTitle(formatCount2MS(obj.count), {
-        //         fontType: "monospaced",
-        //       });
-        //     }
-        //   });
-        //   pomodoro.countList.push(foreverCountdown);
-        //   pomodoro.current = foreverCountdown;
-
-        //   pomodoro.current.start();
-        // });
-        // pomodoro.start();
-        pomodoro = new Pomodoro2({
+        pomodoro = new Pomodoro({
           periods: 2,
-          workTime: 5,
-          breakTime: 2,
+          workTime: 10 * 60,
+          breakTime: 2 * 60,
           onWorkTick(_pomodoro, _countdown) {
             tray.setTitle(
               formatCount2MS(_countdown.count, _countdown.config.limit),
@@ -116,7 +62,7 @@ app.whenReady().then(async () => {
               detail: "点确定，然后到tray中关闭，不然2min后开始反复弹框",
               buttons: ["确定"],
             });
-            const foreverWarning = new CountDown2({
+            const foreverWarning = new CountDown({
               id: "forever",
               onStart(_countdown) {
                 const index = _pomodoro.countDownList.findIndex(
