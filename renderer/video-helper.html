@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>VideoHelper</div>
+    <div>
+        <div>
+            <button id="openWs">开启ws服务</button>
+            <button id="closeWs">关闭ws服务</button>
+        </div>
+        <div>
+            <button id="openWebClient">创建浏览器客户端</button>
+            <button id="testWebClient">测试浏览器客户端</button>
+            <button id="closeWebClient">关闭浏览器客户端</button>
+        </div>
+        <div>
+            <!-- <button id="testNodeClient">测试Nodejs客户端</button> -->
+        </div>
+        <hr>
+        <div>
+            <div>
+                <button id="actionPos">跳转链接</button>
+            </div>
+            <div>
+
+            </div>
+            <div>
+                <button id="playStop">播放/暂停</button>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        const WebSocket = require("ws");
+        let wss = null;
+        let channel = null;
+
+        const btnOpenWs = document.querySelector("#openWs");
+        btnOpenWs.addEventListener("click", function () {
+            const WebSocketServer = WebSocket.Server;
+
+            //在5488端口上打开了一个WebSocket Server，该实例由变量wss引用。
+            wss = new WebSocketServer({
+                port: 5488,
+            });
+
+            //如果有WebSocket请求接入，wss对象可以响应connection事件来处理这个WebSocket：
+            wss.on("connection", function (ws) {
+                //在connection事件中，回调函数会传入一个WebSocket的实例，表示这个WebSocket连接。
+                console.log(`[SERVER] connection()`);
+                channel = ws;
+                ws.on("message", function (message) {
+                    //我们通过响应message事件，在收到消息后再返回一个ECHO: xxx的消息给客户端。
+                    console.log(`[SERVER] Received:${message}`);
+                    ws.send(`ECHO:${message}`, (err) => {
+                        if (err) {
+                            console.log(`[SERVER] error:${err}`);
+                        }
+                    });
+                });
+            });
+        })
+
+        const btnCloseWs = document.querySelector("#closeWs");
+        btnCloseWs.addEventListener("click", function () {
+            wss.close();
+        })
+
+        let webClientWebSocket = null;
+        const btnOpenWebClient = document.querySelector("#openWebClient");
+        btnOpenWebClient.addEventListener("click", function () {
+            var wsUri = "ws://localhost:5488";
+            webClientWebSocket = new window.WebSocket(wsUri);
+            webClientWebSocket.onopen = function (evt) {
+                console.log("[web client onopen]", evt)
+            };
+            webClientWebSocket.onclose = function (evt) {
+                console.log("[web client onclose]", evt)
+            };
+            webClientWebSocket.onmessage = function (evt) {
+                console.log("[web client onmessage]", evt)
+            };
+            webClientWebSocket.onerror = function (evt) {
+                console.log("[web client onerror]", evt)
+            };
+        });
+        const btnTestWebClient = document.querySelector("#testWebClient");
+        btnTestWebClient.addEventListener("click", function () {
+            const now = new Date();
+            const options = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            const formatter = new Intl.DateTimeFormat('default', options);
+            const time = formatter.format(now);
+            webClientWebSocket.send(`hello, from web client @ ${time}`)
+        })
+        const btnCloseWebClient = document.querySelector("#closeWebClient");
+        btnCloseWebClient.addEventListener("click", function () {
+            webClientWebSocket.close();
+        })
+
+        const btnActionPos = document.querySelector("#actionPos");
+        btnActionPos.addEventListener("click", function () {
+            channel.send(JSON.stringify({
+                action: "pos"
+            }), (err) => {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        })
+        const btnPlayStop = document.querySelector("#playStop");
+        btnPlayStop.addEventListener("click", function () {
+            channel.send(JSON.stringify({ action: "playorpause" }), (err) => {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        })
+    </script>
+</body>
+
+</html>

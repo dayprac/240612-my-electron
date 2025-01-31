@@ -1,4 +1,4 @@
-const { BrowserWindow, app, Tray, Menu, dialog } = require("electron");
+const { BrowserWindow, app, Tray, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const { Pomodoro, CountDown } = require("./util");
 
@@ -143,5 +143,39 @@ app.whenReady().then(async () => {
       contextIsolation: false,
     },
   });
-  window.loadFile("./renderer/pomodoro.html");
+  window.loadFile("./renderer/index.html");
+
+  ipcMain.handle("openSiyuanHelper", () => {
+    const window = new BrowserWindow({
+      width: 500,
+      height: 300,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
+    window.loadFile("./renderer/siyuan-helper.html");
+  });
+  ipcMain.handle("openVideoHelper", () => {
+    const window = new BrowserWindow({
+      width: 500,
+      height: 300,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
+    window.loadFile("./renderer/video-helper.html");
+  });
+  ipcMain.handle("openPomodoro", () => {
+    const window = new BrowserWindow({
+      width: 500,
+      height: 300,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
+    window.loadFile("./renderer/pomodoro.html");
+  });
 });

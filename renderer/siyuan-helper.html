@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>siyuan</div>
+    <div>
+        <button id="btnApiLsNotebooks">api lsNotebooks</button>
+        <button id="btnApiQuerySql">api querySql</button>
+        <button id="btn打开2024同日期记录">btn打开2024同日期记录</button>
+    </div>
+    <script type="module">
+        const { SiyuanContext, Block } = require("./siyuan/siyuan.js");
+        const context = new SiyuanContext(
+            "http://127.0.0.1:6806",
+            "qmtxfk8u2jzzc1pl"
+        );
+        const testBlockAnchorId = "20240418143356-0a40kr5"; // [test](siyuan://blocks/20240418143356-0a40kr5)
+        const btnApiLsNotebooks = document.querySelector("#btnApiLsNotebooks");
+        btnApiLsNotebooks.addEventListener("click", async function () {
+            let res = await context.axios.post("/api/notebook/lsNotebooks");
+            console.log(res.data.data)
+        })
+        const btnApiQuerySql = document.querySelector("#btnApiQuerySql")
+        btnApiQuerySql.addEventListener("click", async function () {
+            // const blocks = await context.querySql(
+            //     "SELECT * FROM blocks WHERE id=20201224120447-bx9fwlf"
+            // );
+            // console.log(blocks);
+            const block = await context.getLatestCreatedBlock();
+            console.log(block)
+        })
+        const btn打开2024同日期记录 = document.querySelector("#btn打开2024同日期记录");
+        btn打开2024同日期记录.addEventListener("click", async function () {
+            // let now = new Date();
+            // let data = "2024"
+            let data = "25.02.4-01-09";
+            const blocks = await context.querySql(
+                "SELECT * FROM blocks WHERE id=20201224120447-bx9fwlf"
+            );
+            console.log(blocks);
+        })
+    </script>
+</body>
+
+</html>

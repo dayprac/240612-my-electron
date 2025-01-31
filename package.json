@@ -15,7 +15,9 @@
   "dependencies": {
     "@picovoice/porcupine-node": "^3.0.2",
     "@picovoice/pvrecorder-node": "^1.2.2",
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "vitest": "^2.1.8",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",
