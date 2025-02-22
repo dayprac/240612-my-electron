@@ -16,7 +16,7 @@
             gap: 2px;
             background-color: #000;
         }
-        .video-container {
+        .grid-cell {
             width: 100%;
             height: 100%;
             display: flex;
@@ -43,32 +43,33 @@
             margin: 0 5px;
             padding: 5px 10px;
         }
+        .webview-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+        .webview-container webview {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
-    <div class="video-container">
-        <video id="video1" controls>
-            <source src="../assets/timer.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-container">
-        <video id="video2" controls>
-            <source src="../assets/timer.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-container">
-        <video id="video3" controls>
-            <source src="../assets/timer.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="video-container">
-        <video id="video4" controls>
-            <source src="../assets/timer.mp4" type="video/mp4">
-        </video>
-    </div>
+    <div class="grid-cell" id="cell1"></div>
+    <div class="grid-cell" id="cell2"></div>
+    <div class="grid-cell" id="cell3"></div>
+    <div class="grid-cell" id="cell4"></div>
     <div id="controls">
         <button id="loadVideo">加载视频</button>
         <button id="playAll">播放/暂停</button>
+        <div style="display: inline-block; margin-left: 10px;">
+            <input type="text" id="videoUrl" placeholder="输入在线视频URL" style="padding: 5px; width: 300px;">
+            <button id="loadOnlineVideo">加载在线视频</button>
+        </div>
+        <div style="display: inline-block; margin-left: 10px;">
+            <input type="text" id="webpageUrl" placeholder="输入网页URL" style="padding: 5px; width: 300px;">
+            <button id="loadWebpage">加载视频网页页面</button>
+        </div>
     </div>
     <script>
         class VideoSegment {
@@ -148,29 +149,130 @@
             document.getElementById('video4')
         ];
 
-        const videoSegments = videoElements.map((element, index) => 
-            new VideoSegment(element, index)
-        );
+        let videoSegments = [];
+
+        let isWebviewMode = false;
+
+        function toggleMode(webviewMode) {
+            isWebviewMode = webviewMode;
+            const cells = [
+                document.getElementById('cell1'),
+                document.getElementById('cell2'),
+                document.getElementById('cell3'),
+                document.getElementById('cell4')
+            ];
+
+            // 清理当前模式的元素
+            cells.forEach(cell => {
+                while (cell.firstChild) {
+                    cell.removeChild(cell.firstChild);
+                }
+            });
+
+            if (webviewMode) {
+                // 创建webview元素
+                cells.forEach((cell, index) => {
+                    const webview = document.createElement('webview');
+                    webview.id = `webview${index + 1}`;
+                    webview.style.width = '100%';
+                    webview.style.height = '100%';
+                    cell.appendChild(webview);
+                });
+            } else {
+                // 创建video元素
+                cells.forEach((cell, index) => {
+                    const video = document.createElement('video');
+                    video.id = `video${index + 1}`;
+                    video.controls = true;
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'contain';
+                    cell.appendChild(video);
+                });
+            }
+        }
 
         document.getElementById('loadVideo').addEventListener('click', async () => {
             const { ipcRenderer } = require('electron');
             const videoPath = await ipcRenderer.invoke('select-video');
 
             if (videoPath) {
-                videoSegments.forEach(segment => segment.loadVideo(videoPath));
+                // 清除现有的视频元素和实例
+                videoSegments = [];
+                const cells = [
+                    document.getElementById('cell1'),
+                    document.getElementById('cell2'),
+                    document.getElementById('cell3'),
+                    document.getElementById('cell4')
+                ];
+
+                // 清理所有grid-cell中的元素
+                cells.forEach(cell => {
+                    while (cell.firstChild) {
+                        cell.removeChild(cell.firstChild);
+                    }
+                });
+
+                // 为每个格子创建新的视频元素和实例
+                cells.forEach((cell, i) => {
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'contain';
+                    cell.appendChild(video);
+
+                    const segment = new VideoSegment(video, i);
+                    segment.loadVideo(videoPath);
+                    videoSegments.push(segment);
+                });
+            }
+        });
+
+        document.getElementById('loadOnlineVideo').addEventListener('click', async () => {
+            if (isWebviewMode) {
+                toggleMode(false);
+            }
+            const videoUrl = document.getElementById('videoUrl').value;
+            if (videoUrl) {
+                videoSegments.forEach(segment => segment.loadVideo(videoUrl));
             }
         });
 
         document.getElementById('playAll').addEventListener('click', () => {
-            const isPlaying = !videoSegments[0].video.paused;
-            videoSegments.forEach(segment => {
-                if (isPlaying) {
-                    segment.pause();
-                } else {
-                    segment.play();
-                }
-            });
+            if (!isWebviewMode && videoSegments.length > 0) {
+                const isPlaying = !videoSegments[0].video.paused;
+                videoSegments.forEach(segment => {
+                    if (isPlaying) {
+                        segment.pause();
+                    } else {
+                        segment.play();
+                    }
+                });
+            }
         });
+
+        document.getElementById('loadWebpage').addEventListener('click', () => {
+            const url = document.getElementById('webpageUrl').value;
+            if (url) {
+                if (!isWebviewMode) {
+                    toggleMode(true);
+                }
+                const webviews = [
+                    document.getElementById('webview1'),
+                    document.getElementById('webview2'),
+                    document.getElementById('webview3'),
+                    document.getElementById('webview4')
+                ];
+                
+                webviews.forEach(webview => {
+                    webview.src = url;
+                });
+            }
+        });
+
+        // 初始化显示视频模式
+        toggleMode(false);
     </script>
 </body>
 </html>

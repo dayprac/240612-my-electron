@@ -8,7 +8,8 @@ app.whenReady().then(() => {
         height: 720,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            webviewTag: true
         }
     });
 
