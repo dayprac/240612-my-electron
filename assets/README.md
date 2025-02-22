@@ -1,0 +1,1 @@
+This directory contains assets for testing purposes, such as test videos.
