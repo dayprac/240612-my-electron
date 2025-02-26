@@ -1,10 +1,42 @@
 const { ipcRenderer } = require("electron");
 
 window.addEventListener("DOMContentLoaded", () => {
+  // 注入自定义样式
+  const style = document.createElement("style");
+  style.textContent = `
+    .abcde {
+      position: fixed !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      right: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: initial !important;
+      max-height: initial !important;
+      z-index: 2147483647 !important;
+      background-color: black;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // 为所有视频元素添加自定义样式类
+  function addCustomStyle(video) {
+    let currentElement = video;
+    while (currentElement && currentElement !== document.documentElement) {
+      if (currentElement.classList.contains("plyr")) {
+        currentElement.classList.add("abcde");
+        break;
+      }
+      currentElement = currentElement.parentElement;
+    }
+  }
+
   let segmentIndex = 0;
   let totalSegments = 4;
 
   function setupVideoSegments(video) {
+    addCustomStyle(video);
     video.onloadedmetadata = () => {
       const duration = video.duration;
       const segmentDuration = duration / totalSegments;
