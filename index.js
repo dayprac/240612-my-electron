@@ -178,4 +178,18 @@ app.whenReady().then(async () => {
     });
     window.loadFile("./renderer/pomodoro.html");
   });
+
+  // 处理webview音频控制
+  ipcMain.handle('toggle-webview-audio', (event, webviewId) => {
+    const webContents = event.sender;
+    const allWebContents = webContents.getAllWebContents();
+    const targetWebContents = allWebContents.find(wc => wc.getTitle().includes(webviewId));
+    
+    if (targetWebContents) {
+      const currentMuted = targetWebContents.isAudioMuted();
+      targetWebContents.setAudioMuted(!currentMuted);
+      return !currentMuted;
+    }
+    return null;
+  });
 });

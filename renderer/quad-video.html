@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
             gap: 2px;
             background-color: #000;
         }
+
         .grid-cell {
             width: 100%;
             height: 100%;
@@ -24,36 +26,50 @@
             align-items: center;
             background-color: #111;
         }
+
         video {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
+
         #controls {
             position: fixed;
-            bottom: 20px;
+            bottom: -100px;
+            /* 初始状态隐藏在屏幕外 */
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.7);
             padding: 10px;
             border-radius: 5px;
             z-index: 1000;
+            transition: bottom 0.3s ease-in-out;
+            opacity: 0;
         }
+
+        #controls.visible {
+            bottom: 20px;
+            opacity: 1;
+        }
+
         #controls button {
             margin: 0 5px;
             padding: 5px 10px;
         }
+
         .webview-container {
             display: none;
             width: 100%;
             height: 100%;
         }
+
         .webview-container webview {
             width: 100%;
             height: 100%;
         }
     </style>
 </head>
+
 <body>
     <div class="grid-cell" id="cell1"></div>
     <div class="grid-cell" id="cell2"></div>
@@ -62,6 +78,13 @@
     <div id="controls">
         <button id="loadVideo">加载视频</button>
         <button id="playAll">播放/暂停</button>
+        <div class="speed-controls" style="display: inline-block; margin-left: 10px;">
+            <button class="speed-btn" data-speed="1">1x</button>
+            <button class="speed-btn" data-speed="1.5">1.5x</button>
+            <button class="speed-btn" data-speed="2">2x</button>
+            <button class="speed-btn" data-speed="2.5">2.5x</button>
+            <button class="speed-btn" data-speed="3">3x</button>
+        </div>
         <div style="display: inline-block; margin-left: 10px;">
             <input type="text" id="videoUrl" placeholder="输入在线视频URL" style="padding: 5px; width: 300px;">
             <button id="loadOnlineVideo">加载在线视频</button>
@@ -72,6 +95,41 @@
         </div>
     </div>
     <script>
+        // 控制面板自动隐藏功能
+        const controls = document.getElementById('controls');
+        let controlsTimer;
+
+        function showControls() {
+            controls.classList.add('visible');
+            clearTimeout(controlsTimer);
+            controlsTimer = setTimeout(() => {
+                controls.classList.remove('visible');
+            }, 3000); // 3秒后自动隐藏
+        }
+
+        // 监听鼠标移动事件
+        document.addEventListener('mousemove', (e) => {
+            const threshold = window.innerHeight - 100; // 距离底部100px的区域
+            if (e.clientY > threshold) {
+                showControls();
+            }
+        });
+
+        // 初始显示控制面板
+        showControls();
+
+        // 点击控制面板时重置计时器
+        controls.addEventListener('mouseenter', () => {
+            clearTimeout(controlsTimer);
+            controls.classList.add('visible');
+        });
+
+        controls.addEventListener('mouseleave', () => {
+            controlsTimer = setTimeout(() => {
+                controls.classList.remove('visible');
+            }, 3000);
+        });
+
         class VideoSegment {
             constructor(videoElement, index, totalSegments = 4) {
                 this.video = videoElement;
@@ -153,16 +211,18 @@
 
         let isWebviewMode = false;
 
+        const cells = [
+            document.getElementById('cell1'),
+            document.getElementById('cell2'),
+            document.getElementById('cell3'),
+            document.getElementById('cell4')
+        ];
+
         function toggleMode(webviewMode) {
             isWebviewMode = webviewMode;
-            const cells = [
-                document.getElementById('cell1'),
-                document.getElementById('cell2'),
-                document.getElementById('cell3'),
-                document.getElementById('cell4')
-            ];
+            videoSegments = [];
 
-            // 清理当前模式的元素
+            // 清除所有单元格的内容
             cells.forEach(cell => {
                 while (cell.firstChild) {
                     cell.removeChild(cell.firstChild);
@@ -176,6 +236,7 @@
                     webview.id = `webview${index + 1}`;
                     webview.style.width = '100%';
                     webview.style.height = '100%';
+                    webview.setAttribute('preload', 'preload.js');
                     cell.appendChild(webview);
                 });
             } else {
@@ -188,6 +249,9 @@
                     video.style.height = '100%';
                     video.style.objectFit = 'contain';
                     cell.appendChild(video);
+
+                    const segment = new VideoSegment(video, index);
+                    videoSegments.push(segment);
                 });
             }
         }
@@ -199,12 +263,6 @@
             if (videoPath) {
                 // 清除现有的视频元素和实例
                 videoSegments = [];
-                const cells = [
-                    document.getElementById('cell1'),
-                    document.getElementById('cell2'),
-                    document.getElementById('cell3'),
-                    document.getElementById('cell4')
-                ];
 
                 // 清理所有grid-cell中的元素
                 cells.forEach(cell => {
@@ -220,9 +278,11 @@
                     video.style.width = '100%';
                     video.style.height = '100%';
                     video.style.objectFit = 'contain';
+                    video.muted = false; // 确保视频默认不静音
                     cell.appendChild(video);
 
                     const segment = new VideoSegment(video, i);
+                    segment.video.muted = false; // 确保新创建的视频段不静音
                     segment.loadVideo(videoPath);
                     videoSegments.push(segment);
                 });
@@ -239,6 +299,23 @@
             }
         });
 
+        // 添加播放速度控制按钮的事件监听
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const speed = parseFloat(btn.dataset.speed);
+                if (!isWebviewMode && videoSegments.length > 0) {
+                    videoSegments.forEach(segment => {
+                        segment.video.playbackRate = speed;
+                    });
+                } else if (isWebviewMode) {
+                    const webviews = document.querySelectorAll('webview');
+                    webviews.forEach(webview => {
+                        webview.send('control-videos', `speed:${speed}`);
+                    });
+                }
+            });
+        });
+
         document.getElementById('playAll').addEventListener('click', () => {
             if (!isWebviewMode && videoSegments.length > 0) {
                 const isPlaying = !videoSegments[0].video.paused;
@@ -249,7 +326,25 @@
                         segment.play();
                     }
                 });
-            }
+            } else if (isWebviewMode) {
+                const webviews = [
+                    document.getElementById('webview1'),
+                    document.getElementById('webview2'),
+                    document.getElementById('webview3'),
+                    document.getElementById('webview4')
+                ];
+                const firstWebview = webviews[0];
+                firstWebview.addEventListener('ipc-message', (event) => {
+                    if (event.channel === 'videos-state-response') {
+                        const isPaused = event.args[0];
+                        const action = isPaused ? 'play' : 'pause';
+                        webviews.forEach(webview => {
+                            webview.send('control-videos', action);
+                        });
+                    }
+                });
+                firstWebview.send('check-videos-state');
+            };
         });
 
         document.getElementById('loadWebpage').addEventListener('click', () => {
@@ -264,8 +359,12 @@
                     document.getElementById('webview3'),
                     document.getElementById('webview4')
                 ];
-                
-                webviews.forEach(webview => {
+
+                // 加载URL并设置事件监听
+                webviews.forEach((webview, index) => {
+                    webview.addEventListener('dom-ready', () => {
+                        webview.send('set-segment-index', index);
+                    });
                     webview.src = url;
                 });
             }
@@ -275,4 +374,5 @@
         toggleMode(false);
     </script>
 </body>
+
 </html>
