@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Electron WebSocket 聊天室</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      height: calc(100vh - 40px);
+      gap: 20px;
+    }
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .messages {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .message {
+      margin-bottom: 8px;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .message .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .input-area {
+      display: flex;
+      gap: 10px;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-area button {
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .input-area button:hover {
+      background: #0056b3;
+    }
+    .users-panel {
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+    }
+    .users-panel h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .user-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .user-list li {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    .user-list li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-area">
+      <div class="messages" id="messages"></div>
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="输入消息..." />
+        <button onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+    <div class="users-panel">
+      <h3>在线用户</h3>
+      <ul class="user-list" id="userList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:4000');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const userList = document.getElementById('userList');
+
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server');
+      addMessage('系统', '已连接到聊天室');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received:', data);
+
+      switch (data.type) {
+        case 'chat':
+          addMessage(data.from, data.content, data.timestamp);
+          break;
+        case 'users':
+          updateUserList(data.users);
+          break;
+      }
+    };
+
+    ws.onclose = () => {
+      addMessage('系统', '已断开连接');
+    };
+
+    function sendMessage() {
+      const content = messageInput.value.trim();
+      if (content && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'chat',
+          content: content
+        }));
+        messageInput.value = '';
+      }
+    }
+
+    function addMessage(from, content, timestamp = new Date().toISOString()) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message';
+      messageDiv.innerHTML = `
+        <div class="header">
+          <span>${from}</span>
+          <span>${new Date(timestamp).toLocaleString()}</span>
+        </div>
+        <div class="content">${content}</div>
+      `;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function updateUserList(users) {
+      userList.innerHTML = users
+        .map(user => `<li>${user.name}</li>`)
+        .join('');
+    }
+
+    // 按Enter键发送消息
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
