@@ -6,16 +6,32 @@
       body {
         width: 500px;
       }
+      .time-segments {
+        margin-top: 20px;
+        padding: 10px;
+      }
+      .time-segments a {
+        display: block;
+        margin: 5px 0;
+        color: #0066cc;
+        text-decoration: none;
+      }
+      .time-segments a:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
     <h1>注意事项</h1>
-<ol>
-  <h2><li>先开ClipNote客户端再做笔记</li></h2>
-  <h2><li>浏览器必须在可视范围才有效，不能最小化、不能被其他应用完全盖住（肉眼可以看见浏览器）</li></h2>
-  <h2><li>edge浏览器要设置媒体自动播放（设置->cookie和网站权限->媒体自动播放->允许）</li></h2>
-  <h2><li>chrome浏览器要设置允许声音（设置->隐私和安全->网站设置->更多内容设置->允许）</li></h2>
-  <h2><li>设置浏览器权限（设置->cookie和网站权限->弹出窗口和重定向->允许）</li></h2>
-</ol>
+    <ol>
+      <h2><li>先开ClipNote客户端再做笔记</li></h2>
+      <h2><li>浏览器必须在可视范围才有效，不能最小化、不能被其他应用完全盖住（肉眼可以看见浏览器）</li></h2>
+      <h2><li>edge浏览器要设置媒体自动播放（设置->cookie和网站权限->媒体自动播放->允许）</li></h2>
+      <h2><li>chrome浏览器要设置允许声音（设置->隐私和安全->网站设置->更多内容设置->允许）</li></h2>
+      <h2><li>设置浏览器权限（设置->cookie和网站权限->弹出窗口和重定向->允许）</li></h2>
+    </ol>
+    <div class="time-segments" id="timeSegments"></div>
+    <button id="generateTimeSegments" style="margin: 20px 10px; padding: 10px 20px; background-color: #0066cc; color: white; border: none; border-radius: 5px; cursor: pointer;">生成时间段链接</button>
+    <script src="popup.js"></script>
   </body>
 </html>

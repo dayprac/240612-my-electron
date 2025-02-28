@@ -153,7 +153,28 @@
         });
         if (v && (v != video||video.src=="")) {
             video = v;
-            seek();         
+            // 计算视频时间段
+            if (video.duration) {
+                const totalDuration = video.duration;
+                const segmentDuration = totalDuration / 4;
+                const timeSegments = [];
+                
+                for (let i = 0; i < 4; i++) {
+                    const startTime = i * segmentDuration;
+                    const endTime = (i + 1) * segmentDuration; // 修改为下一个时间段的起点
+                    const formattedStart = formatTime(startTime);
+                    const formattedEnd = formatTime(endTime);
+                    timeSegments.push(`${formattedStart}-${formattedEnd}`);
+                }
+                
+                // 存储时间段信息，以便popup页面请求时使用
+                window._timeSegments = {
+                    segments: timeSegments,
+                    url: href(),
+                    title: document.title || '未知标题'
+                };
+            }
+            seek();
             duration = 0;
             v = null;
         }
@@ -388,6 +409,15 @@
             }
         }
     });
+
+    // 添加消息监听，响应popup页面的时间段获取请求
+    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        if (request.action === "getTimeSegments") {
+            sendResponse(window._timeSegments || { segments: [], url: href() });
+        }
+        return true; // 保持消息通道开启
+    });
+
     function createWebSocket() {
         ws = true;
         socket = new WebSocket(socketUrl);
@@ -501,3 +531,10 @@
         });
     }
 })();
+// 添加时间格式化函数
+function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
