@@ -1,6 +1,7 @@
 const electron = require('electron');
 const { app, BrowserWindow, ipcMain, dialog } = electron;
 const path = require('path');
+const { ElectronBlocker, fullLists, Request } = require('@ghostery/adblocker-electron');
 
 app.whenReady().then(() => {
     const win = new BrowserWindow({
@@ -11,6 +12,10 @@ app.whenReady().then(() => {
             contextIsolation: false,
             webviewTag: true
         }
+    });
+
+    ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+        blocker.enableBlockingInSession(win.webContents.session);
     });
 
     // 处理选择视频文件的 IPC 消息
